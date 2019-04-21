@@ -3,7 +3,7 @@ import platform
 
 class Application(object):
     directory = {'data': './data/', 'model': './model/', }
-    model = {'app_data': directory['model'] + 'test.data', 'predict': '.predict',
+    model = {'app_data': directory['model'] + 'app.data', 'predict': '.predict',
              'all_data': directory['model'] + 'app.data'}
     data = {'emb_file': directory['data'] + 'glove.840B.300d.txt',
             'data_file': directory['data'] + 'quora_duplicate_questions.tsv'}
@@ -16,7 +16,7 @@ class Application(object):
         system = platform.system()
         if system == "Linux":
             self.model_params['batch_size'] = 512
-            self.model_params['epochs'] = 30
+            self.model_params['epochs'] = 20
             self.model['app_data'] = self.directory['model'] + 'app.data'
         else:
             self.model_params['system'] = system

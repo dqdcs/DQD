@@ -5,6 +5,7 @@ import spacy
 
 from keras_preprocessing.sequence import pad_sequences
 from src.application import Application
+from src.file_util import write_file
 
 nlp = spacy.load('en')
 
@@ -59,6 +60,15 @@ def get_tokenizer_data(file_data):
     return tokenizer_data
 
 
+def save_new_dataset(tokenizer_data):
+    words = []
+    for data in tokenizer_data:
+        for q1, q2 in zip(data['q1'], data['q2']):
+            words.append(" ".join(q1))
+            words.append(" ".join(q2))
+    write_file("data/quora_duplicate_questions_words.txt", words)
+
+
 def participle_row_data(data):
     if data is None:
         return []
@@ -73,7 +83,7 @@ def read_file_data(file=Application.data['data_file']):
         reader = csv.DictReader(f, delimiter='\t')
         data = list(reader)
         data = numpy.asarray(data)
-        numpy.random.seed(123)
+        numpy.random.seed(666)
         numpy.random.shuffle(data)
         length = data.shape[0]
         train = data[:int(0.8 * length)]
@@ -97,6 +107,7 @@ def process():
     file_data = read_file_data()
     print('Read file done.\nGetting tokenizer data...')
     tokenizer_data = get_tokenizer_data(file_data)
+    # save_new_dataset(tokenizer_data)
     print('Get tokenizer data done.\nTranslating data...')
     emb_matrix, word2tokenizer = translate(tokenizer_data)
     print('Translate data done.')
