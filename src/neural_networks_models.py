@@ -2,7 +2,6 @@ from keras.models import Model
 from keras.layers.wrappers import Bidirectional
 from keras.layers.merge import multiply, concatenate
 
-
 from keras.layers import Dense, Input, LSTM, Embedding, add, Conv1D, \
     GlobalMaxPooling1D, Dropout, GlobalAveragePooling1D, subtract, GRU, Activation
 from keras.optimizers import Adam
@@ -39,28 +38,31 @@ class NeuralNetworksModels(object):
         return sequence_1_input, sequence_2_input, sequence_3_input, sequence_4_input, embedded_sequences_1, embedded_sequences_2
 
     def get_model(self, embedded_sequences_1, embedded_sequences_2, sequences_1_length, sequences_2_length):
+        model_layer1 = None
         if self.model_style == 'bi_lstm':
             print('using model bi_lstm!!!')
             model_layer1 = Bidirectional(LSTM(Application.model_params['num_nn']))
         elif self.model_style == 'ap_bi_lstm':
             print('using model ap_bi_lstm!!!')
             model_layer1 = Bidirectional(LSTM(Application.model_params['num_nn'], return_sequences=True))
+            model_layer2 = Attention()
             x_1 = model_layer1(embedded_sequences_1)
-            x_1 = Attention()(x_1)
+            x_1 = model_layer2(x_1)
             y_1 = model_layer1(embedded_sequences_2)
-            y_1 = Attention()(y_1)
-            return concatenate([x_1, y_1, SubtractAbs()([x_1, y_1]), multiply([x_1, y_1])])
+            y_1 = model_layer2(y_1)
+            return concatenate([SubtractAbs()([x_1, y_1]), multiply([x_1, y_1])])
         elif self.model_style == 'bi_gru':
             print('using model bi_gru!!!')
             model_layer1 = Bidirectional(GRU(Application.model_params['num_nn']))
         elif self.model_style == 'ap_bi_gru':
             print('using model ap_bi_gru!!!')
             model_layer1 = Bidirectional(GRU(Application.model_params['num_nn'], return_sequences=True))
+            model_layer2 = Attention()
             x_1 = model_layer1(embedded_sequences_1)
-            x_1 = Attention()(x_1)
+            x_1 = model_layer2(x_1)
             y_1 = model_layer1(embedded_sequences_2)
-            y_1 = Attention()(y_1)
-            return concatenate([x_1, y_1, SubtractAbs()([x_1, y_1]), multiply([x_1, y_1])])
+            y_1 = model_layer2(y_1)
+            return concatenate([SubtractAbs()([x_1, y_1]), multiply([x_1, y_1])])
         elif self.model_style == 'cnn':
             model_layer1 = Conv1D(Application.model_params['num_nn'], 2,
                                   padding='valid', activation='relu', strides=1)
@@ -70,15 +72,16 @@ class NeuralNetworksModels(object):
             x_1 = GlobalMaxPooling1D()(x_1)
             y_1 = GlobalMaxPooling1D()(y_1)
 
-            return concatenate([x_1, y_1, SubtractAbs()([x_1, y_1]), multiply([x_1, y_1])])
+            return concatenate([SubtractAbs()([x_1, y_1]), multiply([x_1, y_1])])
         elif self.model_style == 'ap_cnn':
             model_layer1 = Conv1D(Application.model_params['num_nn'], 2,
                                   padding='valid', activation='relu', strides=1)
+            model_layer2 = Attention()
             x_1 = model_layer1(embedded_sequences_1)
             y_1 = model_layer1(embedded_sequences_2)
-            x_1 = Attention()(x_1)
-            y_1 = Attention()(y_1)
-            return concatenate([x_1, y_1, SubtractAbs()([x_1, y_1]), multiply([x_1, y_1])])
+            x_1 = model_layer2(x_1)
+            y_1 = model_layer2(y_1)
+            return concatenate([SubtractAbs()([x_1, y_1]), multiply([x_1, y_1])])
         elif self.model_style == 'multi_attention':
             print('using model multi_attention!!!')
             x_1_1 = Dense(Application.model_params['num_nn'])(embedded_sequences_1)
@@ -105,7 +108,7 @@ class NeuralNetworksModels(object):
             merged = Dense(8)(merged)
             merged = Dense(4)(merged)
         else:
-            merged = Dense(2048)(merged)
+            merged = Dense(2048, activation='tanh')(merged)
             merged = Dense(32)(merged)
             merged = Dense(8)(merged)
         return Dense(1, activation='sigmoid')(merged)
