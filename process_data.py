@@ -83,7 +83,7 @@ def read_file_data(file=Application.data['data_file']):
         reader = csv.DictReader(f, delimiter='\t')
         data = list(reader)
         data = numpy.asarray(data)
-        numpy.random.seed(666)
+        numpy.random.seed(123)
         numpy.random.shuffle(data)
         length = data.shape[0]
         train = data[:int(0.8 * length)]

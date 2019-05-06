@@ -64,7 +64,7 @@ class NeuralNetworksModels(object):
             y_1 = model_layer2(y_1)
             return concatenate([SubtractAbs()([x_1, y_1]), multiply([x_1, y_1])])
         elif self.model_style == 'cnn':
-            model_layer1 = Conv1D(Application.model_params['num_nn'], 2,
+            model_layer1 = Conv1D(Application.model_params['num_nn'], 4,
                                   padding='valid', activation='relu', strides=1)
             x_1 = model_layer1(embedded_sequences_1)
             y_1 = model_layer1(embedded_sequences_2)
@@ -95,6 +95,38 @@ class NeuralNetworksModels(object):
             z_3 = concatenate([x_3, y_3], axis=2)
             z_3 = GlobalMaxPooling1D()(z_3)
             return concatenate([z_2, z_3])
+        elif self.model_style == 'multi_cnn':
+            model_layer1 = Conv1D(Application.model_params['num_nn'], 2,
+                                  padding='valid', activation='relu', strides=1)
+            model_layer2 = Conv1D(Application.model_params['num_nn'], 4,
+                                  padding='valid', activation='relu', strides=2)
+            model_layer3 = Conv1D(Application.model_params['num_nn'], 8,
+                                  padding='valid', activation='relu', strides=3)
+            model_layer4 = Conv1D(Application.model_params['num_nn'], 16,
+                                  padding='valid', activation='relu', strides=4)
+            model_layer1_1 = Attention()
+            model_layer2_1 = Attention()
+            model_layer3_1 = Attention()
+            model_layer4_1 = Attention()
+            x_1 = model_layer1(embedded_sequences_1)
+            y_1 = model_layer1(embedded_sequences_2)
+            x_2 = model_layer2(embedded_sequences_1)
+            y_2 = model_layer2(embedded_sequences_2)
+            x_3 = model_layer3(embedded_sequences_1)
+            y_3 = model_layer3(embedded_sequences_2)
+            x_4 = model_layer4(embedded_sequences_1)
+            y_4 = model_layer4(embedded_sequences_2)
+            x_1 = model_layer1_1(x_1)
+            y_1 = model_layer1_1(y_1)
+            x_2 = model_layer2_1(x_2)
+            y_2 = model_layer2_1(y_2)
+            x_3 = model_layer3_1(x_3)
+            y_3 = model_layer3_1(y_3)
+            x_4 = model_layer4_1(x_4)
+            y_4 = model_layer4_1(y_4)
+            return concatenate([SubtractAbs()([x_1, y_1]), SubtractAbs()([x_2, y_2]), SubtractAbs()([x_3, y_3]),
+                                SubtractAbs()([x_4, y_4]), multiply([x_1, y_1]), multiply([x_2, y_2]),
+                                multiply([x_3, y_3]), multiply([x_4, y_4])])
         else:
             print("did not find this style model")
         x_1 = model_layer1(embedded_sequences_1)
@@ -108,7 +140,7 @@ class NeuralNetworksModels(object):
             merged = Dense(8)(merged)
             merged = Dense(4)(merged)
         else:
-            merged = Dense(2048, activation='tanh')(merged)
+            merged = Dense(1024, activation='relu')(merged)
             merged = Dense(32)(merged)
             merged = Dense(8)(merged)
         return Dense(1, activation='sigmoid')(merged)
