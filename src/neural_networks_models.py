@@ -135,9 +135,9 @@ class NeuralNetworksModels(object):
 
     def mlp(self, merged):
         if self.model_style == 'multi_attention':
-            merged = Dense(2048, activation='relu')(merged)
-            merged = Dense(64)(merged)
-            merged = Dense(8)(merged)
+            merged = Dense(1024, activation='relu')(merged)
+            merged = Dense(32)(merged)
+            # merged = Dense(8)(merged)
             merged = Dense(4)(merged)
         else:
             merged = Dense(1024, activation='relu')(merged)
