@@ -5,6 +5,28 @@ import multiprocessing
 from src.application import Application
 
 
+def _evaluation(pref, truth):
+    TP = 0
+    FP = 0
+    TN = 0
+    FN = 0
+    for p, t in zip(pref, truth):
+        if t == 1:
+            if p == 1:
+                TP += 1
+            else:
+                FP += 1
+        else:
+            if p == 0:
+                TN += 1
+            else:
+                FN += 1
+    P = TP / (TP + FP) * 100
+    R = TP / (TP + FN) * 100
+    F1 = 2 * (P * R) / (P + R)
+    return P, R, F1
+
+
 def _credible(row, alpha):
     one = numpy.zeros_like(row)
     zero = numpy.zeros_like(row)
@@ -64,11 +86,12 @@ def grid_search_credible_voting(truths, truth, show=False):
             [best_pref, best_acc, best_alpha, vote] = res
         if show:
             print(res[1])
+    P, R, F1 = _evaluation(best_pref, truth)
     if show:
         print("best_acc:" + str(best_acc) + "   best_alpha:" + str(best_alpha))
         for v in vote:
             print(v)
-    return best_pref, best_acc, best_alpha
+    return best_pref, best_acc, best_alpha, P, R, F1
 
 
 def max_credible_voting(truths, truth):
@@ -77,8 +100,9 @@ def max_credible_voting(truths, truth):
         pref = numpy.array(list(
             map(lambda p, x: [numpy.max([p[0], 1 - x[0]]), numpy.max([p[1], x[0]])], pref, truths[i])))
     pref = numpy.argmax(pref, axis=-1)
+    P, R, F1 = _evaluation(pref, truth)
     acc = accuracy_score(pref, truth)
-    return pref, acc
+    return pref, acc, P, R, F1
 
 
 def voting(truths, truth):
@@ -86,8 +110,9 @@ def voting(truths, truth):
     for i in range(len(truths)):
         pref = numpy.sum([pref, numpy.array(list(map(lambda x: [0, 1] if x >= 0.5 else [1, 0], truths[i])))], axis=0)
     pref = numpy.argmax(pref, axis=-1)
+    P, R, F1 = _evaluation(pref, truth)
     acc = accuracy_score(pref, truth)
-    return pref, acc
+    return pref, acc, P, R, F1
 
 
 def ensemble(styles, show=False):
@@ -101,16 +126,19 @@ def ensemble(styles, show=False):
             truths.append(pickle.load(f))
     print()
     result = []
-    _, acc, _ = grid_search_credible_voting(truths, truth, show)
+    _, acc, _, P, R, F1 = grid_search_credible_voting(truths, truth, show)
     pool = multiprocessing.Pool(processes=3)
     result.append(pool.apply_async(voting, (truths, truth)))
     result.append(pool.apply_async(max_credible_voting, (truths, truth)))
     pool.close()
     pool.join()
     result = [res.get() for res in result]
-    print('Voting:%.2f MCV:%.2f(+%.2f) CV:%.2f(+%.2f)' % (
-        result[0][1] * 100, result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, acc * 100,
-        acc * 100 - result[0][1] * 100))
+    print('Voting:Acc:%.2f P:%.2f R:%.2f F1:%.2f' % (
+        result[0][1] * 100, result[0][2], result[0][3], result[0][4]))
+    print('MCV:Acc:%.2f(+%.2f) P:%.2f R:%.2f F1:%.2f' % (
+        result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, result[1][2],
+        result[1][3], result[1][4]))
+    print('CV:Acc:%.2f(+%.2f) P:%.2f R:%.2f F1:%.2f' % (acc * 100, acc * 100 - result[0][1] * 100, P, R, F1))
 
 
 def statistic():
@@ -118,26 +146,9 @@ def statistic():
         tokenizer_data, emb_matrix, word2tokenizer = pickle.load(f)
     truth = tokenizer_data[2]['y']
     for style in ['bi_lstm', 'ap_bi_lstm', 'ap_bi_gru', 'bi_gru', 'cnn', 'ap_cnn', 'multi_attention']:
-        TP = 0
-        FP = 0
-        TN = 0
-        FN = 0
         with open(Application.directory['model'] + style + Application.model['predict'], 'rb') as f:
             pref = numpy.array(list(map(lambda x: 1 if x >= 0.5 else 0, pickle.load(f))))
-        for p, t in zip(pref, truth):
-            if t == 1:
-                if p == 1:
-                    TP += 1
-                else:
-                    FP += 1
-            else:
-                if p == 0:
-                    TN += 1
-                else:
-                    FN += 1
-        P = TP / (TP + FP) * 100
-        R = TP / (TP + FN) * 100
-        F1 = 2 * (P * R) / (P + R)
+        P, R, F1 = _evaluation(pref, truth)
         Acc = accuracy_score(pref, truth)
         print('%-17s:P:%.2f\tR:%.2f\tF1:%.2f\tAcc:%.2f' % (style, P, R, F1, Acc))
 
