@@ -115,6 +115,16 @@ def voting(truths, truth):
     return pref, acc, P, R, F1
 
 
+def average(truths, truth):
+    pref = numpy.zeros([truths[0].shape[0], 2])
+    for i in range(len(truths)):
+        pref = numpy.array(list(
+            map(lambda p, x: [numpy.sum([p[0], 1 - x[0]]), numpy.sum([p[1], x[0]])], pref, truths[i])))
+    pref = numpy.argmax(pref, axis=-1)
+    acc = accuracy_score(pref, truth)
+    return pref, acc
+
+
 def ensemble(styles, show=False):
     truths = []
     with open(Application.model['app_data'], 'rb') as f:
@@ -130,27 +140,33 @@ def ensemble(styles, show=False):
     pool = multiprocessing.Pool(processes=3)
     result.append(pool.apply_async(voting, (truths, truth)))
     result.append(pool.apply_async(max_credible_voting, (truths, truth)))
+    result.append(pool.apply_async(average, (truths, truth)))
     pool.close()
     pool.join()
     result = [res.get() for res in result]
-    print('Voting:Acc:%.2f P:%.2f R:%.2f F1:%.2f' % (
-        result[0][1] * 100, result[0][2], result[0][3], result[0][4]))
-    print('MCV:Acc:%.2f(+%.2f) P:%.2f R:%.2f F1:%.2f' % (
-        result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, result[1][2],
-        result[1][3], result[1][4]))
-    print('CV:Acc:%.2f(+%.2f) P:%.2f R:%.2f F1:%.2f' % (acc * 100, acc * 100 - result[0][1] * 100, P, R, F1))
+    # print('Voting:%.2f & %.2f & %.2f & %.2f' % (
+    #     result[0][1] * 100, result[0][2], result[0][3], result[0][4]))
+    # print('MCV:%.2f(+%.2f) & %.2f & %.2f & %.2f' % (
+    #     result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, result[1][2],
+    #     result[1][3], result[1][4]))
+    # print('CV:%.2f(+%.2f) & %.2f & %.2f & %.2f' % (acc * 100, acc * 100 - result[0][1] * 100, P, R, F1))
+    # print('Ave:%.2f(+%.2f)' % (result[2][1] * 100, result[2][1] * 100 - acc * 100))
+    print('paper:%.1f & %.1f(+%.1f) & %.1f(+%.1f)' % (
+        result[0][1] * 100, result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, acc * 100,
+        acc * 100 - result[0][1] * 100))
 
 
 def statistic():
     with open(Application.model['app_data'], 'rb') as f:
         tokenizer_data, emb_matrix, word2tokenizer = pickle.load(f)
     truth = tokenizer_data[2]['y']
-    for style in ['bi_lstm', 'ap_bi_lstm', 'ap_bi_gru', 'bi_gru', 'cnn', 'ap_cnn', 'multi_attention']:
+    for style in ['bi_lstm', 'ap_bi_lstm', 'bi_gru', 'ap_bi_gru', 'cnn', 'ap_cnn', 'multi_attention']:
         with open(Application.directory['model'] + style + Application.model['predict'], 'rb') as f:
             pref = numpy.array(list(map(lambda x: 1 if x >= 0.5 else 0, pickle.load(f))))
         P, R, F1 = _evaluation(pref, truth)
-        Acc = accuracy_score(pref, truth)
-        print('%-17s:P:%.2f\tR:%.2f\tF1:%.2f\tAcc:%.2f' % (style, P, R, F1, Acc))
+        Acc = accuracy_score(pref, truth) * 100
+        # print('%-17s:%.2f & %.2f & %.2f & %.2f' % (style, Acc, P, R, F1))
+        print('%-17s:%.1f & %.1f & %.1f & %.1f' % (style, Acc, P, R, F1))
 
 
 if __name__ == '__main__':

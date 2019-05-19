@@ -9,8 +9,8 @@ class Application(object):
             'data_file': directory['data'] + 'quora_duplicate_questions.tsv'}
     model_params = {'epochs': 3, 'batch_size': 256, 'max_sequence_length': 64, 'lr': 0.001,
                     'system': 'Linux', 'num_nn': 256, 'num_dense': 300, 'head': 8}
-    learner = {'ap_bi_gru': 0.85, 'ap_bi_lstm': 0.85, 'ap_cnn': 0.85, 'bi_gru': 0.85, 'bi_lstm': 0.85,
-               'cnn': 0.85, 'multi_attention': 0.85}
+    learner = {'ap_bi_gru': 0.8665, 'ap_bi_lstm': 0.8654, 'ap_cnn': 0.8518, 'bi_gru': 0.8598, 'bi_lstm': 0.8569,
+               'cnn': 0.852, 'multi_attention': 0.8547}
 
     def __init__(self):
         system = platform.system()
