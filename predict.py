@@ -25,7 +25,9 @@ def run():
     train_set = tokenizer_data[0]
     dev_set = tokenizer_data[1]
     test_set = tokenizer_data[2]
-    style_models = ['multi_attention', 'ap_bi_gru']
+    # style_models = ['bi_gru_multi_attention', 'multi_attention', 'bi_lstm', 'ap_bi_lstm', 'ap_bi_gru', 'bi_gru', 'cnn',
+    #                 'ap_cnn']
+    style_models = ['bi_gru_multi_attention']
     for i in range(100):
         for style_model in style_models:
             train = [train_set['q1'], train_set['q2'], train_set['q1_length'], train_set['q2_length']]

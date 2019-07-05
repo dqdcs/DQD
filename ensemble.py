@@ -144,16 +144,22 @@ def ensemble(styles, show=False):
     pool.close()
     pool.join()
     result = [res.get() for res in result]
-    # print('Voting:%.2f & %.2f & %.2f & %.2f' % (
-    #     result[0][1] * 100, result[0][2], result[0][3], result[0][4]))
-    # print('MCV:%.2f(+%.2f) & %.2f & %.2f & %.2f' % (
-    #     result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, result[1][2],
-    #     result[1][3], result[1][4]))
-    # print('CV:%.2f(+%.2f) & %.2f & %.2f & %.2f' % (acc * 100, acc * 100 - result[0][1] * 100, P, R, F1))
+    print('Voting:%.2f & %.2f & %.2f & %.2f' % (
+        result[0][1] * 100, result[0][2], result[0][3], result[0][4]))
+    print('MCV:%.2f(+%.2f) & %.2f(+%.2f) & %.2f(+%.2f) & %.2f(+%.2f)' % (
+        result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, result[1][2],
+        result[1][2] - result[0][2], result[1][3], result[1][3] - result[0][3], result[1][4],
+        result[1][4] - result[0][4]))
+    print('CV:%.2f(+%.2f) & %.2f(+%.2f) & %.2f(+%.2f) & %.2f(+%.2f)' % (
+    acc * 100, acc * 100 - result[0][1] * 100, P, P - result[0][2], R, R - result[0][3], F1,
+    F1 - result[0][4]))
     # print('Ave:%.2f(+%.2f)' % (result[2][1] * 100, result[2][1] * 100 - acc * 100))
-    print('paper:%.1f & %.1f(+%.1f) & %.1f(+%.1f)' % (
-        result[0][1] * 100, result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, acc * 100,
-        acc * 100 - result[0][1] * 100))
+    # print('paper:%.2f & %.2f(+%.2f) & %.2f(+%.2f)' % (
+    #     result[0][1] * 100, result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, acc * 100,
+    #     acc * 100 - result[0][1] * 100))
+    # print('paper:%.1f & %.1f(+%.1f) & %.1f(+%.1f)' % (
+    #     result[0][1] * 100, result[1][1] * 100, result[1][1] * 100 - result[0][1] * 100, acc * 100,
+    #     acc * 100 - result[0][1] * 100))
 
 
 def statistic():
@@ -165,33 +171,33 @@ def statistic():
             pref = numpy.array(list(map(lambda x: 1 if x >= 0.5 else 0, pickle.load(f))))
         P, R, F1 = _evaluation(pref, truth)
         Acc = accuracy_score(pref, truth) * 100
-        # print('%-17s:%.2f & %.2f & %.2f & %.2f' % (style, Acc, P, R, F1))
-        print('%-17s:%.1f & %.1f & %.1f & %.1f' % (style, Acc, P, R, F1))
+        print('%-17s:%.2f & %.2f & %.2f & %.2f' % (style, Acc, P, R, F1))
+        # print('%-17s:%.1f & %.1f & %.1f & %.1f' % (style, Acc, P, R, F1))
 
 
 if __name__ == '__main__':
-    statistic()
-    ensemble(['multi_attention', 'bi_lstm'])
-    ensemble(['multi_attention', 'ap_bi_lstm'])
-    ensemble(['multi_attention', 'bi_gru'])
-    ensemble(['multi_attention', 'ap_bi_gru'])
-    ensemble(['multi_attention', 'cnn'])
-    ensemble(['multi_attention', 'ap_cnn'])
-
-    ensemble(['multi_attention', 'bi_lstm', 'ap_bi_lstm'])
-    ensemble(['multi_attention', 'bi_gru', 'ap_bi_gru'])
-    ensemble(['multi_attention', 'cnn', 'ap_cnn'])
-
-    ensemble(['multi_attention', 'bi_lstm', 'cnn'])
-    ensemble(['multi_attention', 'bi_lstm', 'bi_gru'])
-    ensemble(['multi_attention', 'bi_gru', 'cnn'])
-
-    ensemble(['multi_attention', 'ap_bi_lstm', 'ap_bi_gru'])
-    ensemble(['multi_attention', 'ap_bi_lstm', 'ap_cnn'])
-    ensemble(['multi_attention', 'ap_cnn', 'ap_bi_gru'])
-
-    ensemble(['multi_attention', 'bi_lstm', 'ap_bi_lstm', 'ap_bi_gru', 'bi_gru'])
-    ensemble(['multi_attention', 'bi_lstm', 'ap_bi_lstm', 'cnn', 'ap_cnn'])
-    ensemble(['multi_attention', 'cnn', 'ap_cnn', 'ap_bi_gru', 'bi_gru'])
+    # statistic()
+    # ensemble(['multi_attention', 'bi_lstm'])
+    # ensemble(['multi_attention', 'ap_bi_lstm'])
+    # ensemble(['multi_attention', 'bi_gru'])
+    # ensemble(['multi_attention', 'ap_bi_gru'])
+    # ensemble(['multi_attention', 'cnn'])
+    # ensemble(['multi_attention', 'ap_cnn'])
+    #
+    # ensemble(['multi_attention', 'bi_lstm', 'ap_bi_lstm'])
+    # ensemble(['multi_attention', 'bi_gru', 'ap_bi_gru'])
+    # ensemble(['multi_attention', 'cnn', 'ap_cnn'])
+    #
+    # ensemble(['multi_attention', 'bi_lstm', 'cnn'])
+    # ensemble(['multi_attention', 'bi_lstm', 'bi_gru'])
+    # ensemble(['multi_attention', 'bi_gru', 'cnn'])
+    #
+    # ensemble(['multi_attention', 'ap_bi_lstm', 'ap_bi_gru'])
+    # ensemble(['multi_attention', 'ap_bi_lstm', 'ap_cnn'])
+    # ensemble(['multi_attention', 'ap_cnn', 'ap_bi_gru'])
+    #
+    # ensemble(['multi_attention', 'bi_lstm', 'ap_bi_lstm', 'ap_bi_gru', 'bi_gru'])
+    # ensemble(['multi_attention', 'bi_lstm', 'ap_bi_lstm', 'cnn', 'ap_cnn'])
+    # ensemble(['multi_attention', 'cnn', 'ap_cnn', 'ap_bi_gru', 'bi_gru'])
 
     ensemble(['multi_attention', 'bi_lstm', 'ap_bi_lstm', 'ap_bi_gru', 'bi_gru', 'cnn', 'ap_cnn'], show=True)

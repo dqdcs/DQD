@@ -3,7 +3,7 @@ from keras.layers.wrappers import Bidirectional
 from keras.layers.merge import multiply, concatenate
 
 from keras.layers import Dense, Input, LSTM, Embedding, add, Conv1D, \
-    GlobalMaxPooling1D, Dropout, GlobalAveragePooling1D, subtract, GRU, Activation
+    GlobalMaxPooling1D, Dropout, GlobalAveragePooling1D, subtract, GRU, Activation,SimpleRNN
 from keras.optimizers import Adam
 
 from src.application import Application
@@ -102,6 +102,18 @@ class NeuralNetworksModels(object):
             z_3 = concatenate([x_3, y_3], axis=2)
             z_3 = GlobalMaxPooling1D()(z_3)
             return concatenate([z_2, z_3])
+        elif self.model_style == 'bi_gru_multi_attention':
+            model_layer1 = Bidirectional(GRU(Application.model_params['num_nn'], return_sequences=True))
+            model_layer2 = MultiHeadAttention(Application.model_params['head'],
+                                              int(Application.model_params['num_nn'] / Application.model_params[
+                                                  'head']))
+            x_1 = model_layer1(embedded_sequences_1)
+            y_1 = model_layer1(embedded_sequences_2)
+            x_2 = model_layer2([x_1, x_1, x_1])
+            y_2 = model_layer2([y_1, y_1, y_1])
+            x_3 = GlobalMaxPooling1D()(x_2)
+            y_3 = GlobalMaxPooling1D()(y_2)
+            return concatenate([SubtractAbs()([x_3, y_3]), multiply([x_3, y_3])])
         else:
             print("did not find this style model")
         x_1 = model_layer1(embedded_sequences_1)
